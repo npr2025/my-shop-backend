@@ -2,15 +2,15 @@
 import fetch from 'node-fetch';
 import sharp from 'sharp';
 
-// Dropboxのウォーターマーク画像の直接ダウンロードURL（dl=1に変更済み）
+// Dropboxのウォーターマーク画像（直接ダウンロード用、dl=1）
 const WATERMARK_URL = 'https://www.dropbox.com/scl/fi/0n2v2pg3pzvdtpve650zl/transc.png?rlkey=3eot8p6o69lu2v4ws0mkppqap&dl=1';
 
 export default async function handler(req, res) {
   try {
-    // クエリパラメータ ?url= で元画像の直接ダウンロードURL（dl=1）を受け取る
+    // ?url= クエリパラメータで元画像のDropbox直接ダウンロードURLを受け取る
     const originalImageUrl = req.query.url;
     if (!originalImageUrl) {
-      return res.status(400).json({ error: '元画像のURLが必要です。例: ?url=https://…&dl=1' });
+      return res.status(400).json({ error: '元画像のURLが必要です。例: ?url=<Dropboxのdl=1リンク>' });
     }
 
     // (1) 元画像を取得
@@ -27,8 +27,7 @@ export default async function handler(req, res) {
     }
     const watermarkBuffer = await watermarkResponse.buffer();
 
-    // (3) Sharpで元画像にウォーターマーク合成
-    // タイル状にウォーターマーク画像を合成し、透明度0.3で重ねます
+    // (3) Sharp でウォーターマーク合成（タイル状に繰り返し、透明度0.3）
     const outputBuffer = await sharp(originalBuffer)
       .composite([{
         input: watermarkBuffer,
@@ -37,12 +36,11 @@ export default async function handler(req, res) {
       }])
       .toBuffer();
 
-    // (4) 出力画像をJPEG形式で返す
+    // (4) 加工後の画像をJPEGで返す（必要に応じてPNG等に変更）
     res.setHeader('Content-Type', 'image/jpeg');
     return res.status(200).send(outputBuffer);
-
   } catch (error) {
-    console.error('ウォーターマーク処理中にエラー:', error);
+    console.error('ウォーターマーク処理中のエラー:', error);
     return res.status(500).json({ error: 'サーバーエラーが発生しました。' });
   }
 }
