@@ -1,3 +1,10 @@
+# macOS の不要ファイル
+.DS_Store
+
+# その他不要なファイルやディレクトリを追加（例）
+*.log
+node_modules/
+
 # Logs
 logs
 *.log
